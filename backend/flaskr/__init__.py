@@ -5,9 +5,10 @@ from flask_cors import CORS
 import random
 
 from models import setup_db, Question, Category
-
-from models import category_fetch_all, format_list_items, question_fetch_page, question_count, questions_list_categories
+from models import category_fetch_all, format_list_items, question_fetch_page
+from models import question_count, questions_list_categories
 from models import question_fetch_page_by_category, question_count_by_category
+
 import random
 
 QUESTIONS_PER_PAGE = 10
@@ -22,12 +23,14 @@ def create_app(test_config=None):
     @app.after_request
     def after_request(response):
         """
-        Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+        Set up CORS. Allow '*' for origins.
         Use the after_request decorator to set Access-Control-Allow
         """
         response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authentication, true')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers',
+                             'Content-Type, Authentication, true')
+        response.headers.add('Access-Control-Allow-Methods',
+                             'GET,PATCH,POST,DELETE,OPTIONS')
         return response
 
     @app.route('/categories')
@@ -49,7 +52,10 @@ def create_app(test_config=None):
         """
         page = request.args.get('page', 1, type=int)
         q_count = question_count()
-        num_pages = q_count // QUESTIONS_PER_PAGE + (1 if q_count % QUESTIONS_PER_PAGE > 0 else 0)
+        num_pages = (
+            q_count // QUESTIONS_PER_PAGE +
+            (1 if q_count % QUESTIONS_PER_PAGE > 0 else 0)
+        )
         if 1 > page or page > num_pages:
             abort(404)
         questions = format_list_items(question_fetch_page(page=page))
@@ -76,15 +82,17 @@ def create_app(test_config=None):
                 'success': True,
                 'deleted': question_id
             })
-        except:
+        except Exception:
             abort(400)
 
     @app.route('/questions', methods=['POST'])
     def insert_question():
         """
         This endpoint is used to:
-        - Add a new question: requires the question and answer text, category, and difficulty score.
-        - Search for questions (max 10 per page) for whom the search term is a substring of the question.
+        - Add a new question: requires the question and answer text, category,
+          and difficulty score.
+        - Search for questions (max 10 per page) for whom the search term is a
+          substring of the question.
         """
         data = request.get_json()
         if 'searchTerm' in data:
@@ -92,10 +100,12 @@ def create_app(test_config=None):
             page = request.args.get('page', 1, type=int)
             search_term = data.get('searchTerm', '')
             q_count = question_count(search_term)
-            num_pages = q_count // QUESTIONS_PER_PAGE + (1 if q_count % QUESTIONS_PER_PAGE > 0 else 0)
+            num_pages = q_count // QUESTIONS_PER_PAGE + (
+                1 if q_count % QUESTIONS_PER_PAGE > 0 else 0)
             if 1 > page or page > num_pages:
                 abort(404)
-            questions = format_list_items(question_fetch_page(search_term=search_term, page=page))
+            questions = format_list_items(
+                question_fetch_page(search_term=search_term, page=page))
             return jsonify({
                 'success': True,
                 'questions': questions,
@@ -116,7 +126,7 @@ def create_app(test_config=None):
                         'success': True,
                         'created': question.id
                     })
-                except:
+                except Exception:
                     abort(422)
             abort(400)
 
@@ -156,10 +166,12 @@ def create_app(test_config=None):
             category = Category.query.get(category_id)
             if category is None:
                 abort(404)
-            questions = Question.query.filter(Question.category == category_id).all()
+            questions = Question.query.filter(
+                Question.category == category_id).all()
         else:
             questions = Question.query.all()
-        candidates = [question for question in questions if question.id not in data['previous_questions']]
+        candidates = [question for question in questions if
+                      question.id not in data['previous_questions']]
         if len(candidates) > 0:
             question = random.choice(candidates)
             return jsonify({

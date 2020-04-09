@@ -11,6 +11,7 @@ import logging
 
 QUESTIONS_PER_PAGE = 10
 
+
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
 
@@ -20,8 +21,9 @@ class TriviaTestCase(unittest.TestCase):
         password = 'abdou'
         host = 'localhost'
         port = 5432
-        database_name = "trivia_test"
-        self.database_path = f"postgresql://{username}:{password}@{host}:{port}/{database_name}"
+        db_name = "trivia_test"
+        self.database_path = f"postgresql://" \
+                             f"{username}:{password}@{host}:{port}/{db_name}"
 
         self.app = create_app()
         self.client = self.app.test_client
@@ -33,14 +35,15 @@ class TriviaTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
-    
+
     def tearDown(self):
         """Executed after reach test"""
         pass
 
     # """
     # TODO
-    # Write at least one test for each test for successful operation and for expected errors.
+    # Write at least one test for each test for successful
+    # operation and for expected errors.
     # """
     def test_get_all_categories(self):
         res = self.client().get('/categories')
@@ -63,12 +66,18 @@ class TriviaTestCase(unittest.TestCase):
     def test_get_questions_last_page(self):
         q_count = Question.query.count()
         q_count_last = q_count % QUESTIONS_PER_PAGE
-        page_num = q_count // QUESTIONS_PER_PAGE + (1 if q_count_last > 0 else 0)
+        page_num = (
+                q_count // QUESTIONS_PER_PAGE
+                + (1 if q_count_last > 0 else 0)
+        )
         res = self.client().get(f'/questions?page={page_num}')
         data = res.get_json()
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertEqual(len(data['questions']), q_count_last if q_count_last > 0 else QUESTIONS_PER_PAGE)
+        self.assertEqual(
+            len(data['questions']),
+            q_count_last if q_count_last > 0 else QUESTIONS_PER_PAGE
+        )
 
     def test_get_questions_inexistant_page(self):
         q_count = Question.query.count()
@@ -122,13 +131,23 @@ class TriviaTestCase(unittest.TestCase):
         # split the sentence to words
         terms = set(question.question.split())
         for term in terms:
-            rc = Question.query.filter(Question.question.ilike(f'%{term}%')).count()
+            rc = (Question.query
+                  .filter(Question.question.ilike(f'%{term}%'))
+                  .count())
             res = self.client().post('/questions', json={'searchTerm': term})
             data = res.get_json()
             self.assertEqual(res.status_code, 200)
             self.assertTrue(data['success'])
-            self.assertEqual(data['total_questions'], rc, f'There are {rc} records containing the word {term} your back end returned {data["total_questions"]}')
-            self.assertEqual(len(data['questions']), min(QUESTIONS_PER_PAGE, rc))
+            self.assertEqual(
+                data['total_questions'],
+                rc,
+                f'There are {rc} records containing'
+                f' the word {term} your back end'
+                f' returned {data["total_questions"]}')
+            self.assertEqual(
+                len(data['questions']),
+                min(QUESTIONS_PER_PAGE, rc)
+            )
 
     def test_questions_by_category(self):
         # select categories_count <= 10 random categories
@@ -136,14 +155,21 @@ class TriviaTestCase(unittest.TestCase):
         categories = random.choices(Category.query.all(), k=categories_count)
         categories_id = [category.id for category in categories]
         for category_id in categories_id:
-            qc = Question.query.filter(Question.category == category_id).count()
+            qc = (Question.query
+                  .filter(Question.category == category_id)
+                  .count())
             res = self.client().get(f'/categories/{category_id}/questions')
             data = res.get_json()
             self.assertEqual(res.status_code, 200)
             self.assertTrue(data['success'])
-            self.assertEqual(data['total_questions'], qc,
-                             f'There are {qc} records in the category {categories_id} your back end returned {data["total_questions"]}')
-            self.assertEqual(len(data['questions']), min(QUESTIONS_PER_PAGE, qc))
+            self.assertEqual(
+                data['total_questions'],
+                qc,
+                f'There are {qc} records in the category {categories_id}'
+                f' your back end returned {data["total_questions"]}')
+            self.assertEqual(
+                len(data['questions']),
+                min(QUESTIONS_PER_PAGE, qc))
             self.assertEqual(data['current_category'], category_id)
 
     def test_questions_by_inexistant_category(self):
@@ -178,7 +204,9 @@ class TriviaTestCase(unittest.TestCase):
         # Select a random catageory
         category = random.choice(Category.query.all())
         quiz_category = category.format()
-        questions_count = Question.query.filter(Question.category == quiz_category['id']).count()
+        questions_count = (Question.query
+                           .filter(Question.category == quiz_category['id'])
+                           .count())
         previous_questions = []
         while True:
             data = {
@@ -223,6 +251,7 @@ class TriviaTestCase(unittest.TestCase):
         }
         res = self.client().post('/quizzes', json=data)
         self.assertEqual(res.status_code, 404)
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

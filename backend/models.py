@@ -9,8 +9,8 @@ username = 'postgres'
 password = 'abdou'
 host = 'localhost'
 port = 5432
-database_name = "trivia"
-database_path = f"postgresql://{username}:{password}@{host}:{port}/{database_name}"
+db_name = "trivia"
+database_path = f"postgresql://{username}:{password}@{host}:{port}/{db_name}"
 
 db = SQLAlchemy()
 
@@ -67,7 +67,9 @@ class Question(db.Model):
         }
 
     def __repr__(self):
-        return f'<Question\nid: {self.id}\nquestion: {self.question}\nanswer: {self.answer}\ncategory: {self.category}\ndifficulty: {self.difficulty}\n>'
+        return f'<Question\nid: {self.id}\nquestion: {self.question}'\
+               + '\nanswer: {self.answer}\ncategory: {self.category}'\
+               + '\ndifficulty: {self.difficulty}\n>'
 
 
 class Category(db.Model):
@@ -150,14 +152,16 @@ def question_count(search_term=None):
                 .count())
 
 
-def question_fetch_page_by_category(categoty, page=1, pagesize=QUESTIONS_PER_PAGE):
+def question_fetch_page_by_category(category,
+                                    page=1,
+                                    pagesize=QUESTIONS_PER_PAGE):
     """
     Fetch questions by category
     """
     start = pagesize * (page - 1)
     end = start + pagesize
     return (Question.query
-            .filter(Question.category == categoty)
+            .filter(Question.category == category)
             .order_by(Question.id)
             .slice(start, end)
             .all())
